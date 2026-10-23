@@ -3,7 +3,7 @@
 // CORS do serviço bloqueia a leitura direta. Lista fechada, só GET, sem
 // credenciais. Roda no servidor do Vercel — nada no PC do usuário, nada no Helper.
 // Rotas (via rewrite do vercel.json): /api/imtheo/<caminho> → /api/imtheo?path=<caminho>
-const UPSTREAM = 'https://offsets.imtheo.lol';
+const UPSTREAM = 'http://127.0.0.1:7962';
 const ALLOWED = { 'roblox/version': 60, 'offsets.json': 300, 'FFlags.hpp': 300 };
 const MAX_BYTES = 32 * 1024 * 1024;
 

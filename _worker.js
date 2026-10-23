@@ -6,7 +6,7 @@
 //
 // Toda resposta do proxy leva X-Bope-Proxy: 1 e X-Bope-Upstream-Status, para o
 // site distinguir "proxy ausente" de "o serviço respondeu erro".
-const UPSTREAM = 'http://127.0.0.1:7962';
+const UPSTREAM = 'https://offsets.imtheo.lol';
 const ALLOWED = { 'roblox/version': 60, 'offsets.json': 300, 'FFlags.hpp': 300 };
 const MAX_BYTES = 32 * 1024 * 1024;
 

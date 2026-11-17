@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#08080a" />
+    <meta name="description" content="Executor do Painel do BOPE." />
+    <meta name="robots" content="noindex" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./bope-32.png" />
+    <link rel="icon" type="image/png" sizes="64x64" href="./bope-64.png" />
+    <link rel="apple-touch-icon" href="./bope-180.png" />
+    <title>Executor — Painel do BOPE</title>
+    <style>
+      :root { color-scheme: dark; --bg:#08080a; --panel:#0f0f12; --border:#1e1e24; --text:#e6e6ea; --muted:#8b8b94; --accent:#c3a5ff; --accent-strong:#a583ff; --ok:#4ade80; --err:#f87171; }
+      * { box-sizing: border-box; }
+      html, body { background: var(--bg); color: var(--text); margin: 0; height: 100%; font: 13px/1.45 'Bricolage Grotesque','Segoe UI',system-ui,sans-serif; -webkit-font-smoothing: antialiased; }
+      .app { display: grid; grid-template-rows: auto auto 1fr auto auto; height: 100%; }
+      header { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: #0b0b0e; border-bottom: 1px solid var(--border); }
+      header img { width: 24px; height: 24px; opacity: .95; }
+      header .brand { font-weight: 600; letter-spacing: .3px; }
+      header .brand small { color: var(--muted); font-weight: 400; margin-left: 6px; }
+      header .right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+      .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: #17171c; border: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+      .pill .dot { width: 7px; height: 7px; border-radius: 50%; background: #555; }
+      .pill.on .dot { background: var(--ok); box-shadow: 0 0 0 2px #0f3620; }
+      .pill.err .dot { background: var(--err); }
+      a.back { color: var(--muted); font-size: 12px; text-decoration: none; padding: 4px 10px; border: 1px solid var(--border); border-radius: 6px; }
+      a.back:hover { color: var(--text); border-color: #2a2a32; }
+      nav.tabs { display: flex; gap: 2px; padding: 0 12px; background: #0a0a0d; border-bottom: 1px solid var(--border); overflow-x: auto; }
+      nav.tabs button { background: transparent; color: var(--muted); border: 0; padding: 10px 16px; cursor: pointer; font-size: 13px; border-top: 2px solid transparent; font-family: inherit; }
+      nav.tabs button.active { color: var(--text); border-top-color: var(--accent); background: var(--bg); }
+      nav.tabs button:hover:not(.active) { color: var(--text); }
+      .pane { position: relative; overflow: hidden; height: 100%; }
+      .pane.hidden { display: none; }
+      .scripts { display: grid; grid-template-columns: 260px 1fr; height: 100%; }
+      .list { background: #0a0a0d; border-right: 1px solid var(--border); overflow: auto; }
+      .list .empty { padding: 14px 16px; color: #555; font-style: italic; font-size: 12px; }
+      .list .item { padding: 9px 14px; border-bottom: 1px solid #141418; cursor: pointer; display: flex; gap: 8px; align-items: center; }
+      .list .item:hover { background: #121217; }
+      .list .item.active { background: #1a1424; color: #d7c3ff; }
+      .list .item .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .list .item .x { opacity: .35; }
+      .list .item .x:hover { opacity: 1; color: var(--err); }
+      #editor { position: absolute; inset: 0; }
+      .editor-wrap { position: relative; }
+      footer { display: flex; gap: 8px; align-items: center; padding: 10px 16px; background: #0b0b0e; border-top: 1px solid var(--border); }
+      input[type=text] { flex: 1; background: #0a0a0d; color: var(--text); border: 1px solid var(--border); padding: 7px 10px; border-radius: 5px; font-family: inherit; font-size: 13px; }
+      input[type=text]:focus { outline: none; border-color: var(--accent); }
+      .btn { background: #1a1a20; color: var(--text); border: 1px solid #2a2a32; padding: 7px 14px; border-radius: 5px; cursor: pointer; font: inherit; font-size: 12.5px; }
+      .btn:hover { background: #22222a; }
+      .btn.primary { background: var(--accent-strong); border-color: var(--accent); color: #130a26; font-weight: 600; }
+      .btn.primary:hover { background: var(--accent); }
+      kbd { background: #1a1a20; border: 1px solid #2a2a32; border-bottom-width: 2px; border-radius: 3px; padding: 1px 5px; font-size: 11px; color: var(--muted); }
+      .log { max-height: 90px; min-height: 36px; overflow: auto; font-family: 'JetBrains Mono', Consolas, monospace; font-size: 11px; color: #9a9aa4; padding: 6px 16px; background: #050506; border-top: 1px solid var(--border); }
+      .log .err { color: var(--err); }
+      .log .ok  { color: var(--ok); }
+      .banner { display: none; margin: 12px 16px; padding: 10px 14px; background: #311a22; border: 1px solid #4a2832; border-radius: 6px; color: #f4b8c0; font-size: 12.5px; }
+      .banner.show { display: block; }
+      .banner code { background: #1a0a12; padding: 1px 4px; border-radius: 3px; }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header>
+        <img src="./bope-180.png" alt="" />
+        <div class="brand">Painel do BOPE<small>· executor</small></div>
+        <div class="right">
+          <div class="pill" id="loader-pill"><span class="dot"></span><span id="loader-status">helper offline</span></div>
+          <a class="back" href="./">← painel</a>
+        </div>
+      </header>
+
+      <nav class="tabs">
+        <button class="tab-btn active" data-tab="scripts">Scripts</button>
+      </nav>
+
+      <div class="pane" id="pane-scripts">
+        <div class="banner" id="offline-banner">
+          Helper local não encontrado em <code>127.0.0.1:7962</code>.
+          Abra o CMD e rode <code>cd C:\Program Files (x86)\Steam\steamui &amp;&amp; node 626.js</code>.
+        </div>
+        <div class="scripts">
+          <div class="list" id="scripts-list"></div>
+          <div class="editor-wrap"><div id="editor"></div></div>
+        </div>
+      </div>
+
+      <footer>
+        <button class="btn primary" id="btn-inject">Injetar</button>
+        <button class="btn" id="btn-run">Executar <kbd>F5</kbd></button>
+        <button class="btn" id="btn-save">Salvar como…</button>
+        <input type="text" id="script-name" placeholder="sem-nome.lua" />
+      </footer>
+      <div class="log" id="log"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js"></script>
+    <script src="./executor.js"></script>
+  </body>
+</html>

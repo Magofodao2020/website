@@ -45,16 +45,32 @@ $('btn-clear-log').addEventListener('click', () => {
   $('log').innerHTML = '<div class="empty">Nada por aqui ainda.</div>';
 });
 
-// Storage protegido (modo privado / site data bloqueado não pode quebrar a página)
+// Storage protegido (modo privado / site data bloqueado não pode quebrar a página).
+// localStorage: os scripts continuam salvos depois de fechar e abrir o site.
 const store = {
-  get(k) { try { return sessionStorage.getItem(k); } catch { return null; } },
-  set(k, v) { try { sessionStorage.setItem(k, v); } catch {} },
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
 };
 
-// Scripts em sessionStorage (some ao fechar aba)
 const SCRIPTS_KEY = 'bope.exec.scripts';
-// Rascunho do editor: sobrevive a trocar de aba no painel (o iframe é recriado)
+// Rascunho do editor: sobrevive a trocar de aba no painel e a fechar o site
 const DRAFT_KEY = 'bope.exec.draft';
+
+// Migração: versões antigas guardavam no sessionStorage. Junta o que houver lá
+// (sem sobrescrever o que já está no localStorage) e limpa a cópia antiga.
+try {
+  const oldScripts = JSON.parse(sessionStorage.getItem(SCRIPTS_KEY) || 'null');
+  if (oldScripts && typeof oldScripts === 'object') {
+    let cur = {};
+    try { cur = JSON.parse(store.get(SCRIPTS_KEY) || '{}') || {}; } catch {}
+    store.set(SCRIPTS_KEY, JSON.stringify({ ...oldScripts, ...cur }));
+    sessionStorage.removeItem(SCRIPTS_KEY);
+  }
+  const oldDraft = sessionStorage.getItem(DRAFT_KEY);
+  if (oldDraft && !store.get(DRAFT_KEY)) store.set(DRAFT_KEY, oldDraft);
+  sessionStorage.removeItem(DRAFT_KEY);
+} catch {}
+
 function loadScripts() { try { return JSON.parse(store.get(SCRIPTS_KEY) || '{}'); } catch { return {}; } }
 function saveScripts(s) { store.set(SCRIPTS_KEY, JSON.stringify(s)); }
 function loadDraft() { try { return JSON.parse(store.get(DRAFT_KEY) || 'null'); } catch { return null; } }
